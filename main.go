@@ -1,11 +1,14 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/gorilla/mux"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 func getPort() string {
@@ -16,11 +19,29 @@ func getPort() string {
 	return port
 }
 
-func initDB() {}
+func Init() {
+	dbURL := os.Getenv("dbURL")
+
+	db, err := gorm.Open(postgres.Open(dbURL), &gorm.Config{})
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	db.AutoMigrate(&User{})
+
+	DB = db
+
+}
 
 func initHandlers(r *mux.Router) {
 
-	// r.PathPrefix("/").Handler(http.FileServer(http.Dir("./fe/dist")))
+	var dir string
+
+	flag.StringVar(&dir, "dir", "./fe/dist", "the directory to serve files from. Defaults to the current dir")
+	flag.Parse()
+
+	// r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir(dir))))
 
 	apiRouter := r.PathPrefix("/api").Subrouter()
 	apiRouter.HandleFunc("/health-check", HandleHealthCheck)
@@ -38,6 +59,7 @@ func initServer(serverPort string, r *mux.Router) {
 func main() {
 	serverPort := getPort()
 	r := mux.NewRouter()
+	Init()
 	initHandlers(r)
 	initServer(serverPort, r)
 }
