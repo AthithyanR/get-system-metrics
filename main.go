@@ -20,12 +20,12 @@ func initDB() {}
 
 func initHandlers(r *mux.Router) {
 
-	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./fe/dist")))
+	// r.PathPrefix("/").Handler(http.FileServer(http.Dir("./fe/dist")))
 
 	apiRouter := r.PathPrefix("/api").Subrouter()
 	apiRouter.HandleFunc("/health-check", HandleHealthCheck)
-	apiRouter.HandleFunc("/users", HandleHealthCheck).Methods("GET")
-	apiRouter.HandleFunc("/users", HandleHealthCheck).Methods("POST")
+	apiRouter.HandleFunc("/users", GetUsers).Methods("OPTIONS", "GET")
+	apiRouter.HandleFunc("/users", CreateUser).Methods("OPTIONS", "POST")
 }
 
 func initServer(serverPort string, r *mux.Router) {
