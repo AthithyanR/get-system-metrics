@@ -2,13 +2,20 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 )
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
 
 var DB *gorm.DB
 
@@ -21,6 +28,20 @@ type User struct {
 	Name string `json:"name"`
 	Age  int    `json:"age"`
 }
+
+type Stats struct {
+	MemoryTotal  uint64  `json:"MemoryTotal"`
+	MemoryUsed   uint64  `json:"MemoryUsed"`
+	MemoryCached uint64  `json:"MemoryCached"`
+	MemoryFree   uint64  `json:"MemoryFree"`
+	CpuUser      float64 `json:"CpuUser"`
+	CpuSystem    float64 `json:"CpuSystem"`
+	CpuIdle      float64 `json:"CpuIdle"`
+}
+
+var stat Stats
+
+var wsClients []*websocket.Conn
 
 // var users []User
 
@@ -73,4 +94,21 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		Success: true,
 	}
 	json.NewEncoder(w).Encode(response)
+}
+
+func HandleWS(w http.ResponseWriter, r *http.Request) {
+	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	wsClients = append(wsClients, conn)
+}
+
+func SendStat() {
+	for _, conn := range wsClients {
+		conn.WriteJSON(stat)
+	}
 }
