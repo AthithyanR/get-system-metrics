@@ -3,7 +3,9 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
+	"github.com/gorilla/mux"
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 )
@@ -34,7 +36,20 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	var users []User
-	DB.Find(&users)
+	// DB.Find(&users)
+	params := mux.Vars(r)
+	count, err := strconv.Atoi(params["count"])
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	for i := 0; i < count; i++ {
+		users = append(users, User{
+			Uid:  uuid.NewV4().String(),
+			Name: "Athi " + strconv.Itoa(i+1),
+			Age:  23,
+		})
+	}
 	json.NewEncoder(w).Encode(users)
 }
 

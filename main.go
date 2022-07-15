@@ -45,8 +45,8 @@ func initHandlers(r *mux.Router) {
 
 	apiRouter := r.PathPrefix("/api").Subrouter()
 	apiRouter.HandleFunc("/health-check", HandleHealthCheck)
-	apiRouter.HandleFunc("/users", GetUsers).Methods("OPTIONS", "GET")
-	apiRouter.HandleFunc("/users", CreateUser).Methods("OPTIONS", "POST")
+	apiRouter.HandleFunc("/users/{count}", GetUsers).Methods("OPTIONS", "GET")
+	// apiRouter.HandleFunc("/users", CreateUser).Methods("OPTIONS", "POST")
 }
 
 func initServer(serverPort string, r *mux.Router) {
@@ -59,7 +59,7 @@ func initServer(serverPort string, r *mux.Router) {
 func main() {
 	serverPort := getPort()
 	r := mux.NewRouter()
-	Init()
+	// Init()
 	initHandlers(r)
 	initServer(serverPort, r)
 }
